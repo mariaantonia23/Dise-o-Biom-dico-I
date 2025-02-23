@@ -1,0 +1,70 @@
+const int led_rojo_rgb = 9;
+const int led_verde_rgb = 10;
+const int led_azul_rgb = 11;
+#define PIN_TEMP A0
+const int led_rojo = 6;
+#define PULSADOR 7
+#define BUZZER 5
+
+float valor_temperatura;
+bool silenciado = false;
+unsigned long tiempoSilencio = 0;
+const unsigned long duracionSilencio = 5000; // 5 segundos
+
+void setup() {
+  pinMode(led_rojo_rgb, OUTPUT);
+  pinMode(led_verde_rgb, OUTPUT);
+  pinMode(led_azul_rgb, OUTPUT);
+  pinMode(led_rojo, OUTPUT);
+  pinMode(PIN_TEMP, INPUT);
+  pinMode(PULSADOR, INPUT);
+  pinMode(BUZZER, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  valor_temperatura = analogRead(PIN_TEMP);
+
+  valor_temperatura = ( valor_temperatura * 500.0) / 1023.0;
+
+  Serial.println(valor_temperatura);
+
+  if (valor_temperatura >= 36 && valor_temperatura <= 37){
+    digitalWrite(led_rojo_rgb, 0);
+    digitalWrite(led_verde_rgb, 1);
+    digitalWrite(led_azul_rgb, 0);
+  } else if (valor_temperatura > 37 && valor_temperatura <= 38){
+    digitalWrite(led_rojo_rgb, 1);
+    digitalWrite(led_verde_rgb, 1);
+    digitalWrite(led_azul_rgb, 0);
+  } else if (valor_temperatura > 38){
+    digitalWrite(led_rojo_rgb, 1);
+    digitalWrite(led_verde_rgb, 0);
+    digitalWrite(led_azul_rgb, 0);
+    digitalWrite(led_rojo, 1);
+    digitalWrite(BUZZER, HIGH); 
+    delay(100);
+    digitalWrite(BUZZER, LOW);
+    delay(200);
+    // Si el pulsador se presiona, inicia el silencio
+    if (digitalRead(PULSADOR) == LOW && !silenciado) {
+      silenciado = true;
+      tiempoSilencio = millis();
+      digitalWrite(BUZZER, LOW);  // Apagar el buzzer
+    }
+
+    // Verificar si ha pasado el tiempo de silencio
+    if (silenciado && (millis() - tiempoSilencio >= duracionSilencio)) {
+      silenciado = false;  // Reactivar el buzzer después del tiempo de silencio
+    }
+
+    // Si no está silenciado, hacer sonar el buzzer
+    if (!silenciado) {
+      digitalWrite(BUZZER, HIGH);
+      delay(100);
+      digitalWrite(BUZZER, LOW);
+      delay(200);
+    }
+
+  } 
+}
